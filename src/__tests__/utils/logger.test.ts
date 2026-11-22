@@ -40,3 +40,15 @@ describe("logger redaction", () => {
     expect(output).not.toContain("direct-session");
   });
 });
+
+describe("buildLoggerOptions log level", () => {
+  it("defaults level to info in production and debug in development", () => {
+    expect(buildLoggerOptions(true).level).toBe("info");
+    expect(buildLoggerOptions(false).level).toBe("debug");
+  });
+
+  it("allows explicit logLevel parameter to override the default", () => {
+    expect(buildLoggerOptions(true, "warn").level).toBe("warn");
+    expect(buildLoggerOptions(false, "fatal").level).toBe("fatal");
+  });
+});

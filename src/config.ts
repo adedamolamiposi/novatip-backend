@@ -112,6 +112,34 @@ function optionalBoolean(key: string, fallback: boolean): boolean {
 const appBaseUrl = optional("APP_BASE_URL", "http://localhost:3000");
 const apiBaseUrl = optional("API_BASE_URL", "http://localhost:3001");
 const nodeEnv = optional("NODE_ENV", "development");
+
+export const PINO_LOG_LEVELS = [
+  "fatal",
+  "error",
+  "warn",
+  "info",
+  "debug",
+  "trace",
+  "silent",
+] as const;
+export type PinoLogLevel = (typeof PINO_LOG_LEVELS)[number];
+
+function isPinoLogLevel(value: string): value is PinoLogLevel {
+  return (PINO_LOG_LEVELS as readonly string[]).includes(value);
+}
+
+const rawLogLevel = optional("LOG_LEVEL", "");
+let logLevel: PinoLogLevel | undefined;
+if (rawLogLevel.trim() !== "") {
+  const normalized = rawLogLevel.trim().toLowerCase();
+  if (!isPinoLogLevel(normalized)) {
+    throw new Error(
+      `Env var LOG_LEVEL must be one of ${PINO_LOG_LEVELS.join(", ")}, got "${rawLogLevel}"`,
+    );
+  }
+  logLevel = normalized;
+}
+
 const webhookEncryptionKey = optional("WEBHOOK_ENCRYPTION_KEY", "");
 
 if (
@@ -168,6 +196,7 @@ export const config = {
   port: optionalInt("PORT", 3001),
   host: optional("HOST", "0.0.0.0"),
   nodeEnv,
+  logLevel,
 
   databaseUrl: require("DATABASE_URL"),
   redisUrl: optional("REDIS_URL", "redis://localhost:6379"),

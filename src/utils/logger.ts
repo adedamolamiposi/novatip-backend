@@ -3,7 +3,7 @@
  * Thin wrapper around Fastify's built-in pino logger for use outside routes.
  */
 import pino, { type LoggerOptions } from "pino";
-import { config } from "../config.js";
+import { config, type PinoLogLevel } from "../config.js";
 
 /**
  * The pino options shared by this module's own logger and the one Fastify
@@ -15,9 +15,12 @@ import { config } from "../config.js";
  * exactOptionalPropertyTypes, under which an explicit `undefined` is not a
  * valid value for an optional property — the key has to be absent instead.
  */
-export function buildLoggerOptions(isProduction: boolean): LoggerOptions {
+export function buildLoggerOptions(
+  isProduction: boolean,
+  logLevel?: PinoLogLevel,
+): LoggerOptions {
   return {
-    level: isProduction ? "info" : "debug",
+    level: logLevel ?? config.logLevel ?? (isProduction ? "info" : "debug"),
     redact: {
       paths: [
         "headers.authorization",

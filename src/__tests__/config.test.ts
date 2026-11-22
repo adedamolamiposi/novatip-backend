@@ -14,6 +14,7 @@ const envKeys = [
   "MAX_BODY_SIZE",
   "WEBHOOK_MAX_PAYLOAD_SIZE",
   "MAX_PAYLOAD_SIZE",
+  "LOG_LEVEL",
 ] as const;
 const originalEnv = Object.fromEntries(
   envKeys.map((key) => [key, process.env[key]]),
@@ -43,6 +44,7 @@ beforeEach(() => {
   delete process.env["MAX_BODY_SIZE"];
   delete process.env["WEBHOOK_MAX_PAYLOAD_SIZE"];
   delete process.env["MAX_PAYLOAD_SIZE"];
+  delete process.env["LOG_LEVEL"];
 });
 
 afterEach(() => {
@@ -110,6 +112,36 @@ describe("config", () => {
     await expect(loadConfig()).resolves.toMatchObject({
       notifications: { emailMaxPerCreatorPerHour: 0 },
     });
+  });
+
+  it("defaults logLevel to undefined when LOG_LEVEL is not set", async () => {
+    await expect(loadConfig()).resolves.toMatchObject({
+      logLevel: undefined,
+    });
+  });
+
+  it("parses and validates a valid LOG_LEVEL", async () => {
+    process.env["LOG_LEVEL"] = "warn";
+
+    await expect(loadConfig()).resolves.toMatchObject({
+      logLevel: "warn",
+    });
+  });
+
+  it("normalizes case for LOG_LEVEL", async () => {
+    process.env["LOG_LEVEL"] = "INFO";
+
+    await expect(loadConfig()).resolves.toMatchObject({
+      logLevel: "info",
+    });
+  });
+
+  it("throws when LOG_LEVEL is not a valid pino log level", async () => {
+    process.env["LOG_LEVEL"] = "verbose";
+
+    await expect(loadConfig()).rejects.toThrow(
+      'Env var LOG_LEVEL must be one of fatal, error, warn, info, debug, trace, silent, got "verbose"',
+    );
   });
 });
 
