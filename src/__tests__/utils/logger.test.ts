@@ -40,3 +40,38 @@ describe("logger redaction", () => {
     expect(output).not.toContain("direct-session");
   });
 });
+
+describe("buildLoggerOptions development configuration", () => {
+  it("configures debug level and pino-pretty transport in development", () => {
+    const options = buildLoggerOptions(false);
+
+    expect(options.level).toBe("debug");
+    expect(options.transport).toEqual({
+      target: "pino-pretty",
+      options: { colorize: true },
+    });
+  });
+
+  it("omits transport and uses info level in production", () => {
+    const options = buildLoggerOptions(true);
+
+    expect(options.level).toBe("info");
+    expect(options.transport).toBeUndefined();
+  });
+
+  it("applies header and cookie redaction paths in development options", () => {
+    const options = buildLoggerOptions(false);
+
+    expect(options.redact).toEqual({
+      paths: [
+        "headers.authorization",
+        "headers.cookie",
+        "req.headers.authorization",
+        "req.headers.cookie",
+        "request.headers.authorization",
+        "request.headers.cookie",
+      ],
+      censor: "[Redacted]",
+    });
+  });
+});
